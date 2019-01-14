@@ -9,6 +9,7 @@ Created on Sun Jan 13 22:16:00 2019
 import urllib.request as ulb
 import random
 import time
+import xlwt
  
 # 免费代理IP不能保证永久有效，如果不能用可以更新
 # http://www.goubanjia.com/
@@ -49,8 +50,8 @@ def get_html_data(url = 'https://www.baidu.com/',proxy_list = proxy_list_global,
     proxy = random.choice(proxy_list)
     header = random.choice(header_list)
  
-    print("proxy =",proxy)
-    print("hearder = ",header,"\n")
+#    print("proxy =",proxy)
+#    print("hearder = ",header,"\n")
  
     # 基于选择的IP构建连接
     urlhandle = ulb.ProxyHandler({'http': proxy})
@@ -64,7 +65,45 @@ def get_html_data(url = 'https://www.baidu.com/',proxy_list = proxy_list_global,
     response.add_header('User-Agent', header)
  
     # 打开网络图像文件句柄
-    fp = ulb.urlopen(response)
-    html_data = fp.read()
- 
+    try:
+        fp = ulb.urlopen(response)
+        html_data = fp.read()
+    except ulb.HTTPError:
+        print("NotFound :",url)
+        html_data = "NotFound"
+    except ulb.URLError:
+        print("URLError :",url)
+        html_data = "URLError"
+        
     return html_data
+
+def save_to_excle(data_name = [],save_data = [],file_name = 'test',file_path = '',sheet_name = 'my_worksheet',encoding='utf-8'):
+    if not isinstance(data_name,list) :
+        raise TypeError("Data's name is not a list.")
+    list_col = len(data_name)
+    
+    list_row = len(save_data)
+    if list_row == 0:
+        raise ValueError("Data is empty.")
+        
+    if not isinstance(save_data[0],list) :
+        raise TypeError("Data are not a matrix.")
+    
+    file_name = file_name + '.xlsx'
+    workbook = xlwt.Workbook(encoding)
+    worksheet = workbook.add_sheet(sheet_name)
+    for i in  range(list_col):
+        worksheet.write(0,i,data_name[i])
+    
+    for i in range(list_row):
+        if list_col != len(save_data[i]):
+            raise NameError("Data are not a matrix.")
+        for j in range(list_col):
+            worksheet.write(i+1,j,save_data[i][j])
+            
+    workbook.save(file_name)
+    
+if __name__ == "__main__":
+    name = ['a','b']
+    data = [[1,2],[5,6],[5,6]]
+    save_to_excle(name,data)
